@@ -1,102 +1,105 @@
-# swirl courses
+### Introduction
 
-This is a collection of interactive courses for use with the [swirl R package](http://swirlstats.com). You'll find instructions for installing courses further down on this page. Some courses are still in development and we'd love to hear any [suggestions](https://github.com/swirldev/swirl_courses/issues/new) you have as you work through them.
+This second programming assignment will require you to write an R
+function that is able to cache potentially time-consuming computations.
+For example, taking the mean of a numeric vector is typically a fast
+operation. However, for a very long vector, it may take too long to
+compute the mean, especially if it has to be computed repeatedly (e.g.
+in a loop). If the contents of a vector are not changing, it may make
+sense to cache the value of the mean so that when we need it again, it
+can be looked up in the cache rather than recomputed. In this
+Programming Assignment you will take advantage of the scoping rules of
+the R language and how they can be manipulated to preserve state inside
+of an R object.
 
-For more information regarding swirl, visit [swirlstats.com](http://swirlstats.com) or the [swirl GitHub repository](https://github.com/swirldev/swirl). If you'd like to write your own interactive content, please visit the [Instructors page](http://swirlstats.com/instructors.html) of our website.
+### Example: Caching the Mean of a Vector
 
-Here are our current offerings, organized by level of difficulty:
+In this example we introduce the `<<-` operator which can be used to
+assign a value to an object in an environment that is different from the
+current environment. Below are two functions that are used to create a
+special object that stores a numeric vector and caches its mean.
 
-#### Beginner
+The first function, `makeVector` creates a special "vector", which is
+really a list containing a function to
 
-- **R Programming**: The basics of programming in R
-- [**R Programming E**](https://github.com/swirldev/R_Programming_E): Same as the original, but modified slightly for in-class use (see below ***)
-- **Data Analysis**: Basic ideas in statistics and data visualization
-- **Mathematical Biostatistics Boot Camp**: One- and two-sample t-tests, power, and sample size
-- **Open Intro**: A very basic introduction to statistics, data analysis, and data visualization
+1.  set the value of the vector
+2.  get the value of the vector
+3.  set the value of the mean
+4.  get the value of the mean
 
-\*\*\* *R Programming Alt is identical to R Programming, except we've eliminated the prompts for Coursera credentials at the end of each lesson and instead give students the option to send an email to their instructor notifying them of completion. Admittedly, it's sort of a hack until we come up with a more robust solution for in-class use (i.e. an instructor "dashboard").*
+<!-- -->
 
-#### Intermediate
+    makeVector <- function(x = numeric()) {
+            m <- NULL
+            set <- function(y) {
+                    x <<- y
+                    m <<- NULL
+            }
+            get <- function() x
+            setmean <- function(mean) m <<- mean
+            getmean <- function() m
+            list(set = set, get = get,
+                 setmean = setmean,
+                 getmean = getmean)
+    }
 
-- **Regression Models**: The basics of regression modeling in R
-- **Getting and Cleaning Data**: dplyr, tidyr, lubridate, oh my!
+The following function calculates the mean of the special "vector"
+created with the above function. However, it first checks to see if the
+mean has already been calculated. If so, it `get`s the mean from the
+cache and skips the computation. Otherwise, it calculates the mean of
+the data and sets the value of the mean in the cache via the `setmean`
+function.
 
-#### Advanced
+    cachemean <- function(x, ...) {
+            m <- x$getmean()
+            if(!is.null(m)) {
+                    message("getting cached data")
+                    return(m)
+            }
+            data <- x$get()
+            m <- mean(data, ...)
+            x$setmean(m)
+            m
+    }
 
-- **Statistical Inference**: This intermediate to advanced level course closely follows the
-[Statistical Inference course](https://www.coursera.org/course/statinference) of the Johns Hopkins 
-[Data Science Specialization](https://www.coursera.org/specialization/jhudatascience/1) on Coursera. It
-introduces the student to basic concepts of statistical inference
-including probability, hypothesis testing, confidence intervals and
-p-values. It concludes with an initiation to topics of particular
-relevance to big data, issues of multiple testing and resampling.
+### Assignment: Caching the Inverse of a Matrix
 
-Since our users come from a variety backgrounds, it's very hard to label material as **Beginner**, **Intermediate**, or **Advanced**. If you find something that is labelled **Beginner** to be challenging, please don't be discouraged. The first step of learning anything is to acknowledge that you are capable of understanding it. True understanding will come with time and practice.
+Matrix inversion is usually a costly computation and there may be some
+benefit to caching the inverse of a matrix rather than computing it
+repeatedly (there are also alternatives to matrix inversion that we will
+not discuss here). Your assignment is to write a pair of functions that
+cache the inverse of a matrix.
 
-#### Course Authors
+Write the following functions:
 
-- **Writing swirl Courses**: An interactive guides and example 
-  for swirl course authors. The first group of lessons cover basics. The rest cover 
-  special topics useful primarily as samples--points of departure for one's own material.
-  For more comprehensive documentation about writing your own swirl courses see http://swirlstats.com/swirlify/.
+1.  `makeCacheMatrix`: This function creates a special "matrix" object
+    that can cache its inverse.
+2.  `cacheSolve`: This function computes the inverse of the special
+    "matrix" returned by `makeCacheMatrix` above. If the inverse has
+    already been calculated (and the matrix has not changed), then
+    `cacheSolve` should retrieve the inverse from the cache.
 
-## Install and run a course automatically from swirl
+Computing the inverse of a square matrix can be done with the `solve`
+function in R. For example, if `X` is a square invertible matrix, then
+`solve(X)` returns its inverse.
 
-**This is the preferred method of installing courses.** It automates the process by allowing you to do everything right from the R console.
+For this assignment, assume that the matrix supplied is always
+invertible.
 
-1) Make sure you have a recent version version of swirl:
+In order to complete this assignment, you must do the following:
 
-```
-install.packages("swirl")
-```
+1.  Fork the GitHub repository containing the stub R files at
+    [https://github.com/rdpeng/ProgrammingAssignment2](https://github.com/rdpeng/ProgrammingAssignment2)
+    to create a copy under your own account.
+2.  Clone your forked GitHub repository to your computer so that you can
+    edit the files locally on your own machine.
+3.  Edit the R file contained in the git repository and place your
+    solution in that file (please do not rename the file).
+4.  Commit your completed R file into YOUR git repository and push your
+    git branch to the GitHub repository under your account.
+5.  Submit to Coursera the URL to your GitHub repository that contains
+    the completed R code for the assignment.
 
-2) Enter the following from the R console, **substituting the name of the course** that you wish to install:
+### Grading
 
-```
-library(swirl)
-install_course("Course Name Here")
-swirl()
-```
-
-For example, `install_course("R Programming")` will install the R Programming course. **Please note that course names are case sensitive!**
-
-If that doesn't work for you...
-
-## Install and run a course manually
-
-If the automatic course installation method outlined above does not work for you, then there's a simple alternative.
-
-1) Click [**here**](https://github.com/swirldev/swirl_courses/archive/master.zip) to download the file `swirl_courses-master.zip`.
-
-2) Enter the following from the R console, **substituting the correct file path** to your downloaded file and the **name of your desired course**:
-
-```
-library(swirl)
-install_course_zip("path/to/file/here/swirl_courses-master.zip", multi=TRUE, 
-                   which_course="Course Name Here")
-swirl()
-```
-
-For example, if you download the zip file to `~/Downloads/swirl_courses-master.zip`, then the following command will install the R Programming course.
-
-```
-install_course_zip("~/Downloads/swirl_courses-master.zip", multi=TRUE, which_course="R Programming")
-```
-
-**Please note that course names are case sensitive!**
-
-Although we recommend you install one course at a time, if you omit the `which_course` argument, then all available courses from this repository will be installed:
-
-```
-install_course_zip("~/Downloads/swirl_courses-master.zip", multi=TRUE)
-```
-
-## Uninstall a course
-
-If you'd like to remove a course at any time, you can use `uninstall_course("Course Name Here")`.
-
-## Using swirl in the classroom
-
-Instructors around the world are using swirl in their classrooms. We think this is awesome. If you're an instructor, please feel free to do the same -- free of charge. While your students may be paying to take your course or attend your institution, we simply ask that you don't charge people *directly* for the use of our software or instructional content.
-
-If you are not sure about a particular use case, don't hesitate to send us an email at info@swirlstats.com.
+This assignment will be graded via peer assessment.
